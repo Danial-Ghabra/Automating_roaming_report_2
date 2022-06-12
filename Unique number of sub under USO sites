@@ -1,0 +1,62 @@
+import cx_Oracle
+
+con = cx_Oracle.connect('***/***@***')
+print("Database version:", con.version)
+print("Oracle Python version:", cx_Oracle.version)
+cur = con.cursor()
+cur.execute("select imsi,CELL_ID from **** where call_date >= to_date('2022-05-12 00:00:00','yyyy-mm-dd HH24:MI:SS') AND call_date <= to_date('2022-05-12 23:59:59','yyyy-mm-dd HH24:MI:SS') and partner_code = '***'")
+file_ref = open("f:/charv2.txt","w")
+for row in cur:
+    file_ref.write(str(row))
+file_ref.close()
+
+fileref = open("f:/charv2.txt", "r")
+content = fileref.read()
+content_modify = content.replace("(","").replace(" ", "").split(")")
+newlst1 =[]
+for item in content_modify:
+    y = item.split(",")
+    newlst1.append(y)
+fileref.close()
+
+#function to convert list to dictionary
+def Convert(lst):
+    res_dct = {lst[i][1]: lst[i][0] for i in range(0, len(lst)-1)}
+    return res_dct
+
+#function to create the USO LACCI list to lookup in the queried dictionary
+def site_list(file_path):
+    filelacci = open(file_path,"r")
+    lines = filelacci.readlines()
+    laccilst=list()
+    for line in lines:
+        newlines = line.strip()
+        newlines = "'"+newlines+"'"
+        laccilst.append(newlines)
+    filelacci.close()
+    return laccilst
+
+lacci1_lst = site_list("f:/lacci.txt")
+newlst1.pop()
+
+IMSI_lst = []
+for lacci in newlst1:
+    if lacci[1] in lacci1_lst:
+        IMSI_lst.append(lacci[0])
+#print(len(IMSI_lst))
+
+unique_imsi = set(IMSI_lst)
+print('number of unique subs in USO sites for 2G3G are: ' ,len(unique_imsi))
+
+
+lacci4G_lst = site_list("f:/lacci4g.txt")
+
+IMSI4G_lst = []
+for lacci4g in newlst1:
+    if lacci4g[1] in lacci4G_lst:
+        IMSI4G_lst.append(lacci4g[0])
+#print(len(IMSI_lst))
+
+unique_imsi4G = set(IMSI4G_lst)
+print('number of unique subs in USO sites for 4G are: ' ,len(unique_imsi4G))
+
